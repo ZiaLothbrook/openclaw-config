@@ -21,8 +21,9 @@ ExecStart=/bin/bash -c '\
   cd "$CONFIG_REPO" || exit 1; \
   echo "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ) [$(hostname -s)] health check starting" >> "$LOG"; \
   CLAUDE_BIN=$(command -v claude || echo "$HOME/.npm-global/bin/claude"); \
+  CLAUDE_EXIT=0; \
   "$CLAUDE_BIN" --print --dangerously-skip-permissions --max-turns 25 \
-    -p "$(cat "$PROMPT_FILE")" >> "$LOG" 2>&1; \
-  CLAUDE_EXIT=$?; \
-  echo "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ) [$(hostname -s)] health check done (exit $CLAUDE_EXIT)" >> "$LOG"'
+    -p "$(cat "$PROMPT_FILE")" >> "$LOG" 2>&1 || CLAUDE_EXIT=$?; \
+  echo "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ) [$(hostname -s)] health check done (exit $CLAUDE_EXIT)" >> "$LOG"; \
+  exit $CLAUDE_EXIT'
 StandardError=append:%h/.openclaw/logs/health-check-errors.log

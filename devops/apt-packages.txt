@@ -12,7 +12,8 @@ tmux
 wget
 curl
 git
-bat          # Ubuntu 23.04+: package is 'bat'. Older Ubuntu: use 'batcat' (sudo apt install bat || sudo apt install batcat)
+# Ubuntu 23.04+: package is 'bat'. Older Ubuntu: use 'batcat' (sudo apt install batcat)
+bat
 
 # Process management
 htop

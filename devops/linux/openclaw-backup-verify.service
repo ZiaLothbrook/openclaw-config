@@ -14,6 +14,8 @@ ExecStart=/bin/bash -c '\
   LOG="$HOME/.openclaw/logs/backup-verify.log"; \
   mkdir -p "$(dirname "$LOG")"; \
   echo "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ) starting integrity check" >> "$LOG"; \
-  restic -r "$REPO" check --read-data-subset=10%% 2>&1 | tee -a "$LOG"; \
-  echo "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ) integrity check done" >> "$LOG"'
+  RESTIC_EXIT=0; \
+  restic -r "$REPO" check --read-data-subset=10%% 2>&1 | tee -a "$LOG" || RESTIC_EXIT=$?; \
+  echo "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ) integrity check done (exit $RESTIC_EXIT)" >> "$LOG"; \
+  exit $RESTIC_EXIT'
 StandardError=append:%h/.openclaw/logs/backup-verify-errors.log
