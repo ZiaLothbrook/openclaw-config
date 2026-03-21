@@ -255,6 +255,25 @@ from a master machine. Fleet state lives in `~/openclaw-fleet/` (one markdown fi
 server). The `gateway-restart` skill ensures graceful restarts that don't interrupt
 active conversations.
 
+## Documentation
+
+Deep-dive guides for advanced setups and multi-agent coordination:
+
+| Document                              | Purpose                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| **docs/MULTI_AGENT_COMMUNICATION.md** | Setup multi-agent coordination across separate OpenClaw gateways via Slack @-mentions |
+| **docs/FLEET_BOOT_PATTERNS.md**       | Complete runbook for booting, scaling, and managing a fleet of 3+ agents              |
+
+### Multi-Agent Coordination
+
+If you're running multiple OpenClaw instances that need to coordinate:
+
+- **Single-gateway multi-agent:** Fast in-process communication via `sessions_send()`
+- **Multi-gateway fleet:** Isolated agents across machines/VPS, coordinating via Slack
+
+Both patterns are documented with working configs, troubleshooting guides, and boot
+runbooks.
+
 ## Development
 
 ```bash
