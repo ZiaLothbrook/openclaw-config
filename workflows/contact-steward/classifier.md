@@ -147,7 +147,11 @@ bulletproof.
   (`do shell script`, `tell application`, `run script`), SQL phrases (`DROP TABLE`,
   `DELETE FROM`, `INSERT INTO` — full phrases, not bare keywords), or instruction-like
   text ("ignore previous", "system:")
-- **Company/role:** Same charset rules as names, ≤ 200 characters
+- **Company/role:** More permissive than names — may contain Unicode letters, digits,
+  spaces, hyphens, apostrophes, periods, commas, `&`, `/`, `(`, `)`. Legitimate values
+  like `AT&T`, `3M`, `R&D`, `VP, Sales`, `Acme Corp. (Holdings)` should all pass. Must
+  be ≤ 200 characters. Still reject shell metacharacters (`;`, `` ` ``, `$`, `|`) and
+  instruction-like text
 
 If a value fails validation:
 
