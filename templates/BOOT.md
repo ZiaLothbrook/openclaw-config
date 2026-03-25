@@ -4,14 +4,10 @@ When the gateway starts (or restarts), run through this checklist before doing a
 else. This is your "waking up" moment — orient yourself, check what happened while you
 were offline, and get ready.
 
-## 1. Orient
+## 1. Conversation Recovery (Was I Mid-Conversation?)
 
-- Read `SOUL.md` — remember who you are
-- Read `USER.md` — remember who you're helping
-- Read `memory/YYYY-MM-DD.md` (today) — what happened so far today?
-- If today's file doesn't exist, read yesterday's — pick up where you left off
-
-## 2. Conversation Recovery (Was I Mid-Conversation?)
+**Do this first — time-sensitive.** The 1-minute window starts from the restart, not
+from when you finish orienting. Check the session store before reading any other files.
 
 Check if a restart interrupted an active conversation.
 
@@ -41,7 +37,14 @@ Check if a restart interrupted an active conversation.
 
 **If NOT interrupted (> 1 min ago or no recent direct conversation):**
 
-- Skip to step 3 (check for unfinished work)
+- Continue to step 2 (Orient)
+
+## 2. Orient
+
+- Read `SOUL.md` — remember who you are
+- Read `USER.md` — remember who you're helping
+- Read `memory/YYYY-MM-DD.md` (today) — what happened so far today?
+- If today's file doesn't exist, read yesterday's — pick up where you left off
 
 ## 3. Check for Unfinished Work
 
@@ -53,7 +56,7 @@ Check if a restart interrupted an active conversation.
 
 Don't message your human on routine restarts. Only reach out if:
 
-- Step 2 detected an interrupted conversation (already handled above)
+- Step 1 detected an interrupted conversation (already handled above)
 - You found unfinished urgent work that needs their attention
 - Something is broken that was working before
 - It's been >24h since any interaction (check-in is appropriate)

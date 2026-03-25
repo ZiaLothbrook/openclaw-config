@@ -90,11 +90,12 @@ Look up the notification channel and recipient ID from each person's fleet file,
 send via SSH:
 
 ```bash
-ssh <host> "openclaw message send --channel <channel> -t <recipient_id> -m '<message>'"
+ssh <host> 'openclaw message send --channel <channel> --target <recipient_id> --message "<message>"'
 ```
 
-**Important:** Single quotes in the message must be escaped. Messages come FROM their
-bot, not from the fleet owner.
+**Important:** Use single quotes around the SSH command so the local shell doesn't
+expand `$`, backticks, or backslashes in the message. Double-quote the message value on
+the remote side. Messages come FROM their bot, not from the fleet owner.
 
 ## 5. Confirm
 
