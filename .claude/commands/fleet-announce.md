@@ -93,9 +93,10 @@ send via SSH:
 ssh <host> 'openclaw message send --channel <channel> --target <recipient_id> --message "<message>"'
 ```
 
-**Important:** Use single quotes around the SSH command so the local shell doesn't
-expand `$`, backticks, or backslashes in the message. Double-quote the message value on
-the remote side. Messages come FROM their bot, not from the fleet owner.
+**Important:** Single quotes around the SSH command prevent local shell expansion of
+`$`, backticks, and backslashes. Single quotes inside the message must be escaped as
+`'\''` (e.g., `"I'\''ll be back"`). Messages come FROM their bot, not from the fleet
+owner.
 
 ## 5. Confirm
 

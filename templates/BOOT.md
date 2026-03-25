@@ -24,16 +24,17 @@ Check if a restart interrupted an active conversation.
 
 **If interrupted (< 1 min ago):**
 
-1. Read the last 20 lines of that session's JSONL transcript
-2. Extract the last few user messages and your last response
-3. Write a short summary of the interrupted conversation to a temp note: what was being
+1. Run Orient (Step 2) — load your identity and context before reaching out
+2. Read the last 20 lines of that session's JSONL transcript
+3. Extract the last few user messages and your last response
+4. Write a short summary of the interrupted conversation to a temp note: what was being
    discussed, what the user last asked, what you were working on
-4. Send the user a message via the `message` tool on the channel where the conversation
+5. Send the user a message via the `message` tool on the channel where the conversation
    was happening:
    - Keep it brief: "Just restarted. We were working on [X]. Want to pick up where we
      left off?"
    - Include enough context that they can say "yes, continue" without re-explaining
-5. Reply with NO_REPLY after sending the message
+6. Reply with NO_REPLY after sending the message
 
 **If NOT interrupted (> 1 min ago or no recent direct conversation):**
 
