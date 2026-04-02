@@ -24,8 +24,9 @@ integration skills.
   pyproject.toml, no shared code between skills. Each skill is fully self-contained.
 - Each skill has `SKILL.md` (metadata) + executable script (same name as directory)
 - Bump `VERSION` file and skill's `SKILL.md` version on changes
-- Keep README.md in sync: update the version badge, skill count badge, and
-  skill/workflow tables when adding, removing, or versioning skills and workflows
+- Keep README.md in sync: update the skill/workflow tables when adding, removing, or
+  versioning skills and workflows (counts and version badges are intentionally omitted
+  from the README to avoid maintenance burden)
 - Tests skip gracefully when API keys unavailable
 - Keep secrets out of the repo — API keys and `.env` files stay local
 - **This is a public repo — zero PII, zero fleet specifics.** This repo is a shareable

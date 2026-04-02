@@ -1,11 +1,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/OpenClaw-Config-D97757?style=for-the-badge&labelColor=1a1a2e" alt="OpenClaw Config">
   <br><br>
-  <a href="https://github.com/TechNickAI/openclaw-config/releases"><img src="https://img.shields.io/badge/version-0.20.0-D97757?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
   <a href="https://github.com/TechNickAI/openclaw-config/stargazers"><img src="https://img.shields.io/github/stars/TechNickAI/openclaw-config?style=flat-square&color=D97757" alt="Stars"></a>
-  <img src="https://img.shields.io/badge/skills-15-blueviolet?style=flat-square" alt="Skills">
   <a href="https://github.com/TechNickAI/openclaw-config/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome"></a>
 </p>
 
@@ -30,9 +28,9 @@ Everything is markdown and Python scripts. No frameworks, no databases, no lock-
 
 - **Memory that persists** — Three-tier architecture: always-loaded essentials, daily
   context files, and deep knowledge with semantic search
-- **15 skills** — Web research, meeting transcripts, CRM, phone system, voice calling,
-  task management, and more — each a standalone Python script with zero setup
-- **7 autonomous workflows** — Agents that triage your inbox, manage tasks, prep your
+- **Skills** — Web research, meeting transcripts, CRM, phone system, voice calling, task
+  management, and more — each a standalone Python script with zero setup
+- **Autonomous workflows** — Agents that triage your inbox, manage tasks, prep your
   calendar, organize contacts, monitor security threats, keep cron jobs healthy, and
   improve themselves over time — learning your preferences and compounding corrections
   into permanent knowledge
