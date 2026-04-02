@@ -476,7 +476,7 @@ echo "=== services ===" && \
 echo "gateway: $(systemctl --user is-active openclaw-gateway 2>/dev/null || echo 'unknown')" && \
 echo "backup-timer: $(systemctl --user is-active openclaw-workspace-backup.timer 2>/dev/null || echo 'NOT ACTIVE')" && \
 echo "health-timer: $(systemctl --user is-active openclaw-health-check.timer 2>/dev/null || echo 'NOT ACTIVE')" && \
-echo "backup-freshness: $(RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups snapshots --latest 1 --json 2>/dev/null | python3 -c "import sys,json; s=json.load(sys.stdin); print(s[0]['time'][:19] if s else 'NO SNAPSHOTS')" 2>/dev/null || echo 'NO REPO')" && \
+echo "backup-freshness: $(restic -r ~/openclaw-backups --insecure-no-password snapshots --latest 1 --json 2>/dev/null | python3 -c "import sys,json; s=json.load(sys.stdin); print(s[0]['time'][:19] if s else 'NO SNAPSHOTS')" 2>/dev/null || echo 'NO REPO')" && \
 echo "=== workspace ===" && \
 WORKSPACE=$(python3 -c "import json; d=json.load(open(\"$HOME/.openclaw/openclaw.json\")); print(d['agents']['defaults'].get('workspace','NOT SET'))") && \
 ls "$WORKSPACE"/{AGENTS,SOUL,USER,MEMORY,IDENTITY,HEARTBEAT,TOOLS,BOOT}.md >/dev/null 2>&1 && echo "core files: all present" || echo "core files: MISSING" && \
