@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/OpenClaw-Config-D97757?style=for-the-badge&labelColor=1a1a2e" alt="OpenClaw Config">
   <br><br>
-  <a href="https://github.com/TechNickAI/openclaw-config/releases"><img src="https://img.shields.io/badge/version-0.19.0-D97757?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/TechNickAI/openclaw-config/releases"><img src="https://img.shields.io/badge/version-0.20.0-D97757?style=flat-square" alt="Version"></a>
   <img src="https://img.shields.io/badge/python-3.11+-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
   <a href="https://github.com/TechNickAI/openclaw-config/stargazers"><img src="https://img.shields.io/github/stars/TechNickAI/openclaw-config?style=flat-square&color=D97757" alt="Stars"></a>
@@ -30,11 +30,12 @@ Everything is markdown and Python scripts. No frameworks, no databases, no lock-
 
 - **Memory that persists** — Three-tier architecture: always-loaded essentials, daily
   context files, and deep knowledge with semantic search
-- **14 skills** — Web research, meeting transcripts, CRM, phone system, voice calling,
+- **15 skills** — Web research, meeting transcripts, CRM, phone system, voice calling,
   task management, and more — each a standalone Python script with zero setup
-- **6 autonomous workflows** — Agents that triage your inbox, manage tasks, prep your
-  calendar, organize contacts, monitor security threats, and keep cron jobs healthy —
-  learning your preferences over time
+- **7 autonomous workflows** — Agents that triage your inbox, manage tasks, prep your
+  calendar, organize contacts, monitor security threats, keep cron jobs healthy, and
+  improve themselves over time — learning your preferences and compounding corrections
+  into permanent knowledge
 - **Templates for identity** — Define your AI's personality, your profile, and how it
   should operate
 - **DevOps included** — Hourly health checks, fleet management across machines,
@@ -95,13 +96,15 @@ openclaw-config/
 │   ├── calendar-steward/    # Daily briefing with travel & meeting prep
 │   ├── contact-steward/    # Detect and organize unknown contacts
 │   ├── security-sentinel/  # Threat intelligence & exposure mapping
-│   └── cron-healthcheck/   # Broken cron detection & auto-remediation
+│   ├── cron-healthcheck/   # Broken cron detection & auto-remediation
+│   └── learning-loop/     # Self-improvement — corrections → patterns → knowledge
 │
 ├── memory/             # Example memory directory structure
 │   ├── people/         # One file per person
 │   ├── projects/       # One file per project
 │   ├── topics/         # Domain expertise & preferences
-│   └── decisions/      # Important decisions with reasoning
+│   ├── decisions/      # Important decisions with reasoning
+│   └── learning/       # Corrections, patterns, and improvement archive
 │
 └── devops/             # Health checks & fleet management
 ```
@@ -121,7 +124,7 @@ independently.
 | **limitless**            | Query Pendant lifelogs & conversations                                 | 0.2.0   |
 | **asana**                | Task & project management via MCP                                      | 0.1.0   |
 | **followupboss**         | Real estate CRM — contacts, deals, pipeline                            | 0.1.0   |
-| **librarian**            | Curate and maintain the knowledge base                                 | 0.2.0   |
+| **librarian**            | Curate and maintain the knowledge base                                 | 0.3.0   |
 | **create-great-prompts** | Prompt engineering for LLM agents                                      | 2.0.0   |
 | **smart-delegation**     | Route work to Opus, Grok, or handle directly                           | 0.1.0   |
 | **workflow-builder**     | Design new autonomous workflows                                        | 0.1.0   |
@@ -135,14 +138,15 @@ independently.
 Workflows are autonomous agents that run on a schedule. Unlike skills (tools you
 invoke), workflows maintain state, learn your preferences, and manage themselves.
 
-| Workflow              | What it does                                                   | Version |
-| --------------------- | -------------------------------------------------------------- | ------- |
-| **email-steward**     | Triage inbox — archive noise, label, alert on important        | 0.3.0   |
-| **task-steward**      | Classify work, create tasks, spawn sub-agents, QA results      | 0.1.0   |
-| **calendar-steward**  | Daily briefing — travel time, meeting prep, conflict detection | 0.1.0   |
-| **contact-steward**   | Detect unknown contacts across platforms, classify & organize  | 0.2.0   |
-| **security-sentinel** | Threat intelligence research & fleet exposure mapping          | 0.1.0   |
-| **cron-healthcheck**  | Detect broken cron jobs, auto-remediate, escalate failures     | 0.1.0   |
+| Workflow              | What it does                                                               | Version |
+| --------------------- | -------------------------------------------------------------------------- | ------- |
+| **email-steward**     | Triage inbox — archive noise, label, alert on important                    | 0.3.0   |
+| **task-steward**      | Classify work, create tasks, spawn sub-agents, QA results                  | 0.1.0   |
+| **calendar-steward**  | Daily briefing — travel time, meeting prep, conflict detection             | 0.1.0   |
+| **contact-steward**   | Detect unknown contacts across platforms, classify & organize              | 0.2.0   |
+| **security-sentinel** | Threat intelligence research & fleet exposure mapping                      | 0.1.0   |
+| **cron-healthcheck**  | Detect broken cron jobs, auto-remediate, escalate failures                 | 0.1.0   |
+| **learning-loop**     | Self-improvement — capture corrections, detect patterns, promote learnings | 0.1.0   |
 
 Each workflow maintains its own state:
 

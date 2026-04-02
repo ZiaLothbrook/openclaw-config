@@ -479,3 +479,34 @@ Your personality lives in `SOUL.md`. Your human's profile lives in `USER.md`. Yo
 environment notes live in `TOOLS.md`. Your learnings live in `MEMORY.md`.
 
 Add conventions, style, and rules to `MEMORY.md` as you figure out what works.
+
+## Self-Reflection (Learning Loop)
+
+You get better over time. After meaningful interactions, silently evaluate whether
+something worth capturing happened:
+
+- **Did my human correct me?** ("No, do it this way") → Log as `correction`
+- **Did something fail before I found a working path?** → Log as `error`
+- **Did I discover a non-obvious pattern?** → Log as `discovery`
+- **Did my human state a preference I didn't know?** → Log as `preference`
+
+If any apply, append a structured entry to `memory/learning/corrections.md`:
+
+```markdown
+## YYYY-MM-DD — [source: main session, workflow name, etc.]
+
+- **type:** correction | error | discovery | preference
+- **trigger:** What happened
+- **observation:** What went wrong or what was learned
+- **action_taken:** What was done about it
+- **evidence:** How we know this
+```
+
+**Most sessions produce zero corrections. That's healthy.** Don't force it. Don't
+announce it. Just append and move on.
+
+The librarian's daily run detects patterns across corrections. Validated patterns get
+promoted to workflow `agent_notes.md` or topic files automatically. Changes to
+fundamental operating principles get flagged for human approval.
+
+See `workflows/learning-loop/AGENT.md` for the full architecture.

@@ -1,6 +1,6 @@
 ---
 name: librarian
-version: 0.2.0
+version: 0.3.0
 description: >
   Organize and maintain the knowledge base. Promotes durable knowledge from daily files
   into structured locations, trims MEMORY.md, deduplicates, and keeps the filing system
@@ -163,6 +163,46 @@ Append a brief summary to today's daily file (`memory/YYYY-MM-DD.md`):
 ```
 
 This creates an audit trail and helps the next run know where the last one left off.
+
+### Step 8: Learning Analysis (Pattern Detection)
+
+After standard memory maintenance, run the learning loop's pattern detection pass. This
+is how corrections compound into improvements over time.
+
+1. **Read** `memory/learning/corrections.md` — scan entries from the last 30 days
+2. **Group** entries by similarity — same trigger, same domain, same type of correction
+3. **Detect patterns** — if 2+ corrections share the same root cause across different
+   sessions, that's a pattern candidate
+4. **Check for duplicates** — before creating a new pattern, check if it already exists
+   in `memory/learning/patterns.md` or in any workflow's `agent_notes.md`
+5. **Write candidates** to `memory/learning/patterns.md` using the format documented in
+   `workflows/learning-loop/AGENT.md` Phase 2
+6. **Prune stale corrections** — archive entries older than 30 days that never became
+   patterns (move to `memory/learning/archive/YYYY-QN.md`). **Exception:** do not
+   archive corrections referenced as evidence in any `status: candidate` pattern — those
+   entries must survive until the pattern is validated or expired
+7. **Prune stale pattern candidates** — archive entries in `patterns.md` with
+   `status: candidate` older than 60 days (set `status: expired`, move to archive)
+8. **Flag stale promoted rules** — check `patterns.md` for entries with
+   `status: promoted` where `promoted_on` is older than 90 days. These are candidates
+   for review — note them in today's daily file but don't auto-delete
+
+Log the results to today's daily file:
+
+```
+## Learning Loop — Pattern Detection
+
+- Corrections reviewed: N (last 30 days)
+- New patterns detected: N
+- Existing patterns updated: N
+- Stale corrections archived: N
+- Stale pattern candidates expired: N
+- Promoted rules flagged for review: N
+```
+
+If `memory/learning/corrections.md` doesn't exist or is empty, skip this step silently.
+
+See `workflows/learning-loop/AGENT.md` for the full learning loop architecture.
 
 ## Wiki-Links (Knowledge Graph)
 
