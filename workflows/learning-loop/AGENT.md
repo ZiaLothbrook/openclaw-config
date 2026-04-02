@@ -109,7 +109,7 @@ learning analysis).
 
 ### The Detection Algorithm
 
-1. Read `memory/learning/corrections.md` (detection window from `rules.md`, default 14
+1. Read `memory/learning/corrections.md` (detection window from `rules.md`, default 30
    days)
 2. Group entries by similarity — same trigger, same domain, same type
 3. Apply the **pattern threshold** from `rules.md` (default: 2+ occurrences across
@@ -169,11 +169,10 @@ Before creating a new pattern, check if it already exists in:
 
 ## Phase 3: Validation and Promotion
 
-**When:** Weekly cron, or triggered when patterns.md accumulates unvalidated candidates
-
-> = the `validation_trigger_count` in `rules.md` (default: 3). candidates. **Where:**
-> Reads `patterns.md`, promotes to permanent locations. **Who:** Learning loop workflow
-> (this file), run on an expensive model.
+**When:** Weekly cron, or when unvalidated candidates in `patterns.md` reach the
+`validation_trigger_count` threshold in `rules.md` (default: 3). **Where:** Reads
+`patterns.md`, promotes to permanent locations. **Who:** Learning loop workflow (this
+file), run on an expensive model.
 
 ### Validation Checklist
 
