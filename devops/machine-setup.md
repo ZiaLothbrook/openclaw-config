@@ -230,19 +230,22 @@ updates, accidental overwrites, and AI-mangled memory files.
 ### Repository
 
 - Location: `~/openclaw-backups`
-- Password file: `~/.openclaw/restic-password` (permissions `600`)
-- Password: `openclaw-local-backup`
+- Password: **none** (`--insecure-no-password`) — repos are unencrypted, no password to
+  lose
+- Password file: `~/.openclaw/restic-password` kept empty (for legacy compat only)
 - Excludes: `browser/`, `skill-venv/`, `logs/` (all regenerable)
 
 **Verify repo exists:**
-`RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups snapshots | tail -3`
+
+```bash
+restic -r ~/openclaw-backups --insecure-no-password snapshots | tail -3
+```
 
 **Fix (initialize new repo):**
 
 ```bash
-echo "openclaw-local-backup" > ~/.openclaw/restic-password
-chmod 600 ~/.openclaw/restic-password
-RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic init --repo ~/openclaw-backups
+printf "" > ~/.openclaw/restic-password
+restic -r ~/openclaw-backups --insecure-no-password init
 ```
 
 ### Automated Schedule
@@ -285,16 +288,15 @@ launchctl load ~/Library/LaunchAgents/ai.openclaw.backup-verify.plist
 ### Manual Operations
 
 **Run a backup now:**
-`RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups backup ~/.openclaw --exclude browser --exclude skill-venv --exclude logs`
+`restic -r ~/openclaw-backups --insecure-no-password backup ~/.openclaw --exclude browser --exclude skill-venv --exclude logs`
 
 **Restore a file:**
-`RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups restore latest --target /tmp/restore --include "MEMORY.md"`
+`restic -r ~/openclaw-backups --insecure-no-password restore latest --target /tmp/restore --include "MEMORY.md"`
 
-**List snapshots:**
-`RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups snapshots`
+**List snapshots:** `restic -r ~/openclaw-backups --insecure-no-password snapshots`
 
 **Verify integrity:**
-`RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups check --read-data-subset=10%`
+`restic -r ~/openclaw-backups --insecure-no-password check --read-data-subset=10%`
 
 ---
 
@@ -537,7 +539,7 @@ GW_PID=$(launchctl list 2>/dev/null | grep ai.openclaw.gateway | awk '{print $1}
 { [[ "$GW_PID" =~ ^[0-9]+$ ]] && echo "gateway: running (PID $GW_PID)" || echo "gateway: NOT RUNNING"; } && \
 echo "backup: $(launchctl list 2>/dev/null | grep -q ai.openclaw.workspace-backup && echo 'loaded' || echo 'NOT LOADED')" && \
 echo "backup-verify: $(launchctl list 2>/dev/null | grep -q ai.openclaw.backup-verify && echo 'loaded' || echo 'NOT LOADED')" && \
-echo "backup-freshness: $(RESTIC_PASSWORD_FILE=~/.openclaw/restic-password restic -r ~/openclaw-backups snapshots --latest 1 --json 2>/dev/null | python3 -c "import sys,json; s=json.load(sys.stdin); print(s[0]['time'][:19] if s else 'NO SNAPSHOTS')" 2>/dev/null || echo 'NO REPO')" && \
+echo "backup-freshness: $(restic -r ~/openclaw-backups --insecure-no-password snapshots --latest 1 --json 2>/dev/null | python3 -c "import sys,json; s=json.load(sys.stdin); print(s[0]['time'][:19] if s else 'NO SNAPSHOTS')" 2>/dev/null || echo 'NO REPO')" && \
 echo "=== workspace ===" && \
 ls ~/.openclaw/workspace/{AGENTS,SOUL,USER,MEMORY,IDENTITY,HEARTBEAT,TOOLS,BOOT}.md >/dev/null 2>&1 && echo "core files: all present" || echo "core files: MISSING" && \
 ls -d ~/.openclaw/workspace/memory/{daily,decisions,imports,people,projects,topics} >/dev/null 2>&1 && echo "memory dirs: all present" || echo "memory dirs: MISSING" && \
