@@ -2,10 +2,10 @@
 name: smart-delegation
 version: 0.2.0
 description: >
-  Intelligent task delegation — route to Opus with deep reasoning for hard problems, or
+  Intelligent task delegation — route to think with deep reasoning for hard problems, or
   Grok for unfiltered takes. Teaches when to escalate, how to pack context into
   sub-agent spawns, and how to communicate delays transparently. Default: handle
-  directly on Opus (thinking off). Escalate only when the quality gain justifies 30-90
+  directly on chat (thinking off). Escalate only when the quality gain justifies 30-90
   seconds of silence.
 
 triggers:
@@ -25,9 +25,9 @@ metadata:
 
 # Smart Delegation
 
-Route tasks to the right thinking level and model. Default: Opus (thinking off) for
-direct conversation. Escalate to deep reasoning or alternate models when the task
-warrants it.
+Route tasks to the right thinking level and model. Default: chat (thinking off) for
+direct conversation. Escalate to deep reasoning (think) or alternate models when the
+task warrants it.
 
 ## Core Principle
 
@@ -39,8 +39,8 @@ delegation is the exception, not the rule.
 
 | Mode           | Model | Thinking | When                                                          | User sees                        |
 | -------------- | ----- | -------- | ------------------------------------------------------------- | -------------------------------- |
-| **Direct**     | Opus  | off      | Default — conversation, quick answers, daily life, most tasks | Normal fast response             |
-| **Deep Think** | Opus  | high     | Complex strategy, hard problems, multi-factor decisions       | "Let me think deeper on this 🧠" |
+| **Direct**     | chat  | off      | Default — conversation, quick answers, daily life, most tasks | Normal fast response             |
+| **Deep Think** | think | high     | Complex strategy, hard problems, multi-factor decisions       | "Let me think deeper on this 🧠" |
 | **Unfiltered** | Grok  | default  | Politically incorrect, edgy, when user wants zero guardrails  | "Getting the unfiltered take 😏" |
 
 ## When to Escalate to Deep Think
@@ -63,8 +63,8 @@ nothing while a sub-agent works. That's the real cost — not tokens, but attent
 
 - Long messages (length ≠ complexity)
 - Multiple questions (could be several simple ones)
-- "Explain X" (usually Opus thinking:off handles explanations fine)
-- Code writing (Opus is excellent at code without extended thinking)
+- "Explain X" (usually chat thinking:off handles explanations fine)
+- Code writing (chat is excellent at code without extended thinking)
 
 ### Never escalate:
 
@@ -174,7 +174,7 @@ sessions_spawn(
   - Be direct about your recommendation — don't hedge
   - Write your response as if you're speaking directly to the user
   """,
-  model: "anthropic/claude-opus-4-6",
+  model: "think",
   thinking: "medium",
   label: "[short descriptive label]"
 )
@@ -309,7 +309,7 @@ If a sub-agent times out (90+ seconds) or returns unhelpful results:
 **Delegation has real costs:** no streaming, no back-and-forth, context loss, 30-90
 second delay. Don't delegate for marginal gains.
 
-- Don't delegate just because a task is "complex" — Opus thinking:off is incredibly
+- Don't delegate just because a task is "complex" — chat thinking:off is incredibly
   capable
 - Don't delegate follow-up questions on a topic you already discussed
 - Don't delegate anything where the user needs to course-correct mid-answer
@@ -358,7 +358,7 @@ Not everyone has Grok configured. Before attempting an unfiltered delegation:
 
 ## Anti-Patterns
 
-- ❌ Delegating everything complex → defeats the purpose of having Opus as default
+- ❌ Delegating everything complex → defeats the purpose of having chat as default
 - ❌ Delegating without telling the user → they think you're frozen
 - ❌ Thin spawn prompts without context → generic, impersonal results
 - ❌ Relaying sub-agent results verbatim → sounds like a different AI
