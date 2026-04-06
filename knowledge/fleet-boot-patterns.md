@@ -385,7 +385,7 @@ tail -f ~/.openclaw-bravo/logs/openclaw.log | grep -i mention
 @bravo test
 bravo test
 @bravo test
-Shell test (if partial enabled)
+bravo test (if partial enabled)
 ```
 
 Check logs for which pattern matched.

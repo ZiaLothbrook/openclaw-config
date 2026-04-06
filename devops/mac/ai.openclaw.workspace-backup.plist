@@ -11,17 +11,16 @@
         <string>-c</string>
         <string>
 export PATH="/opt/homebrew/bin:$PATH"
-export RESTIC_PASSWORD_FILE="$HOME/.openclaw/restic-password"
 REPO="$HOME/openclaw-backups"
 LOG="$HOME/.openclaw/logs/workspace-backup.log"
 
-restic -r "$REPO" backup "$HOME/.openclaw" \
+restic -r "$REPO" --insecure-no-password backup "$HOME/.openclaw" \
   --exclude browser \
   --exclude skill-venv \
   --exclude logs \
   --tag automated --quiet 2>&amp;1 | tee -a "$LOG"
 
-restic -r "$REPO" forget \
+restic -r "$REPO" --insecure-no-password forget \
   --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
   --prune --quiet 2>&amp;1 | tee -a "$LOG"
         </string>
