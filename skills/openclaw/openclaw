@@ -83,7 +83,10 @@ is_user_owned() {
         [ "$base" = "$uf" ] && return 0
     done
     for ud in $USER_OWNED_DIRS; do
-        echo "$file" | grep -q "/$ud/" && return 0
+        # Match paths starting with the dir (logs/foo.md) or containing it (/logs/)
+        case "$file" in
+            "$ud/"*|*"/$ud/"*) return 0 ;;
+        esac
         [ "$base" = "$ud" ] && return 0
     done
     return 1
@@ -105,11 +108,17 @@ cmd_sync() {
 
     local changed=0
 
+    # Positive filter: if no filter flags, sync everything; otherwise only the flagged sections
+    local sync_all=true
+    if $only_skills || $only_templates || $only_workflows; then
+        sync_all=false
+    fi
+
     # Sync templates
-    if ! $only_skills && ! $only_workflows; then
+    if $sync_all || $only_templates; then
         for file in AGENTS.md HEARTBEAT.md; do
             if [ -f "$OPENCLAW_REPO/templates/$file" ]; then
-                if [ ! -f "$OPENCLAW_DIR/$file" ] || $force || diff -q "$OPENCLAW_DIR/$file" "$OPENCLAW_REPO/templates/$file" > /dev/null 2>&1; then
+                if [ ! -f "$OPENCLAW_DIR/$file" ] || $force; then
                     if $dry_run; then
                         echo "[dry-run] Would sync template: $file"
                     else
@@ -118,14 +127,14 @@ cmd_sync() {
                     fi
                     changed=$((changed + 1))
                 else
-                    echo "⚠ Skipping $file (locally modified, use --force to overwrite)"
+                    echo "⚠ Skipping $file (may be customized, use --force to overwrite)"
                 fi
             fi
         done
     fi
 
     # Sync skills
-    if ! $only_templates && ! $only_workflows; then
+    if $sync_all || $only_skills; then
         for skill_dir in "$OPENCLAW_REPO/skills/"*/; do
             local skill=$(basename "$skill_dir")
             if [ -d "$OPENCLAW_DIR/skills/$skill" ]; then
@@ -142,7 +151,7 @@ cmd_sync() {
     fi
 
     # Sync workflows (upstream-owned files only)
-    if ! $only_skills && ! $only_templates; then
+    if $sync_all || $only_workflows; then
         for wf_dir in "$OPENCLAW_REPO/workflows/"*/; do
             local wf=$(basename "$wf_dir")
             if [ -d "$OPENCLAW_DIR/workflows/$wf" ]; then
@@ -150,10 +159,10 @@ cmd_sync() {
                 while IFS= read -r rel_path; do
                     if ! is_user_owned "$rel_path"; then
                         local dest="$OPENCLAW_DIR/workflows/$wf/$rel_path"
-                        mkdir -p "$(dirname "$dest")"
                         if $dry_run; then
                             echo "[dry-run] Would sync workflow file: workflows/$wf/$rel_path"
                         else
+                            mkdir -p "$(dirname "$dest")"
                             cp "$wf_dir$rel_path" "$dest"
                             echo "✓ Synced workflow file: workflows/$wf/$rel_path"
                         fi
