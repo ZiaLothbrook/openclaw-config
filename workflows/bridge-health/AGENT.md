@@ -313,8 +313,7 @@ openclaw cron add \
   --cron "0 8,11,14,17 * * 1-5" \
   --tz "America/Chicago" \
   --session isolated \
-  --delivery-mode none \
-  --model simple \
+  --no-deliver \
   --timeout-seconds 120 \
   --message "Run the bridge health workflow in healthcheck mode. Read workflows/bridge-health/AGENT.md and follow it."
 ```
@@ -329,11 +328,14 @@ openclaw cron add \
   --cron "0 10 * * 1" \
   --tz "America/Chicago" \
   --session isolated \
-  --delivery-mode none \
-  --model simple \
+  --no-deliver \
   --timeout-seconds 180 \
   --message "Run the bridge health workflow in update-check mode. Read workflows/bridge-health/AGENT.md and follow it."
 ```
+
+On hosts with a non-standard workspace layout (no `~/.openclaw/workspace/` CWD), pass an
+absolute path in `--message` instead of the relative `workflows/bridge-health/AGENT.md`.
+Add `--model <alias>` only if the target host has that alias configured.
 
 ## Deployment
 
