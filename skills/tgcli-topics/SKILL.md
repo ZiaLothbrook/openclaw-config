@@ -13,39 +13,33 @@ great for flat-chat history, but it does not expose forum-topic listing. This sk
 bridges the gap by converting the `tgcli` session to a Telethon session and querying the
 MTProto Client API directly.
 
-## Prerequisites
+## Ready-to-run entrypoint
 
-This skill requires `telethon` and a converted session.
-
-1. Ensure the user is logged into `tgcli`.
-2. Install Telethon in a virtual environment (if not already system-wide):
-   ```bash
-   python3 -m venv ~/.tgcli/venv
-   ~/.tgcli/venv/bin/pip install telethon
-   ```
-3. Convert the session to a persistent Telethon session file:
-   ```bash
-   ~/.tgcli/venv/bin/python3 scripts/convert-session.py
-   ```
-   This writes `~/.tgcli/telethon-session.session` by default.
-
-## Usage
-
-Use the discovery script to list topics for peers:
+Use the wrapper below as the default command. It bootstraps a local Telethon virtualenv
+in `~/.tgcli/venv`, installs `telethon` if needed, converts the `tgcli` session to a
+Telethon `.session` file when missing or stale, and then runs topic discovery.
 
 ```bash
 # List topics for all dialogs (Markdown format)
-~/.tgcli/venv/bin/python3 scripts/discover-topics.py --all --markdown
+python3 scripts/tgcli-topics.py --all --markdown
 
 # List topics for specific peers
-~/.tgcli/venv/bin/python3 scripts/discover-topics.py --peers 123456789,987654321
+python3 scripts/tgcli-topics.py --peers 123456789,987654321
 
 # Output as JSON
-~/.tgcli/venv/bin/python3 scripts/discover-topics.py --all --json
+python3 scripts/tgcli-topics.py --all --json
 ```
+
+## Helper scripts
+
+- `scripts/tgcli-topics.py` is the only entrypoint agents should need.
+- `scripts/convert-session.py` remains available for forced/manual conversion.
+- `scripts/discover-topics.py` remains available as the lower-level discovery helper.
 
 ## Notes
 
+- First run may take a moment because the wrapper may create a venv and install
+  `telethon`.
 - Topic discovery paginates, so chats with more than 100 topics are handled correctly.
 - `--include-flat` includes dialogs that do not have forum topics, which is useful for
   audits.

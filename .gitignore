@@ -1,4 +1,5 @@
 # Backup files
+# Databases
 # Editor files
 # Local overrides
 # Logs
@@ -8,6 +9,7 @@
 # Test artifacts
 *.backup
 *.bak
+*.db
 *.key
 *.local
 *.local.md
