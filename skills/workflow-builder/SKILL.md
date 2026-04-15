@@ -266,6 +266,43 @@ The rubric goes in AGENT.md. Scores go in the run log. Over time, score trends r
 drift — a workflow averaging 4.5 that drops to 3.2 over a week signals something
 changed.
 
+#### Verification Level
+
+Not every workflow needs cross-context verification. The right level depends on two
+questions: **can you undo it?** and **who sees the output?**
+
+```
+                        Only user sees it       Others see it
+                        ─────────────────       ─────────────
+Reversible              Level A: Log only       Level B: Self-score
+Irreversible            Level B: Self-score     Level C: Full verify
+```
+
+**Level A — Log only.** Just log what you did. No scorecard, no verification. For
+read-only workflows, reports, and briefings where the output is informational.
+
+**Level B — Self-score + circuit breakers.** Score each run on the quality rubric.
+Auto-demote trust level if quality drops. No cross-context verification — the scorecard
+catches drift over time without the per-run token cost. For workflows whose actions are
+reversible or only affect the user.
+
+**Level C — Full verification.** Self-score + cross-context verifier + circuit breakers.
+The fresh-context reviewer earns its cost because mistakes can't be undone and other
+people are affected. For workflows that send messages, publish content, or take
+irreversible actions visible to others.
+
+**Declare the level in AGENT.md** so both the workflow and auditor know what's expected.
+
+**Examples:**
+
+| Workflow         | Reversible? | Audience | Level           |
+| ---------------- | ----------- | -------- | --------------- |
+| email-steward    | Yes         | User     | B — Self-score  |
+| calendar-steward | Yes         | User     | A — Log only    |
+| contact-steward  | Partial     | User     | B — Self-score  |
+| forward-motion   | No          | Others   | C — Full verify |
+| llm-usage-report | Yes         | User     | A — Log only    |
+
 ---
 
 ## Part 3: Design Patterns
@@ -581,11 +618,13 @@ Return: dimension scores, flagged issues with severity, overall confidence
 
 **When NOT to verify cross-context:**
 
-- High-frequency checks where speed matters more than accuracy (use self-scoring
-  instead)
+- Workflows at verification Level A or B (see Definition of Done → Verification Level)
 - Trivially verifiable output (e.g., "did the API call succeed?" — just check the
   status)
-- Workflows at Level 1 (Supervised) where human is already reviewing everything
+- Workflows at trust Level 1 (Supervised) where human is already reviewing everything
+
+Cross-context verification is reserved for **verification Level C** workflows — those
+that take irreversible actions visible to other people.
 
 ### Pattern 8: Run Scorecard
 
@@ -904,6 +943,15 @@ What constitutes a successful run of this workflow.
 | Judgment     | Were edge cases handled well or properly escalated? |
 | Alerting     | Were alerts appropriate (not noisy, not silent)?    |
 
+### Verification Level
+
+<A or B or C — see Verification Level framework in Part 2. Determines which quality
+infrastructure this workflow uses:>
+
+- **A** — Log only (no scorecard, no verification)
+- **B** — Self-score + circuit breakers (no cross-context verification)
+- **C** — Full verification (self-score + cross-context verifier + circuit breakers)
+
 ## Database (only if this workflow tracks processed items)
 
 **PRAGMA user_version: 1**
@@ -931,21 +979,31 @@ already handled 6. FOR EACH new item: Spawn a sub-agent to process it (see Sub-A
 Orchestration) 7. After each item, update `processed.db` with status 8. Collect
 sub-agent results 9. Alert if anything needs attention
 
-**Quality Gate:** 10. Append actions to today's log in `logs/` 11. **Draft scorecard** —
-score this run using the quality rubric (do NOT log yet) 12. **Verify (if trust level ≥
-2):** Spawn a fresh cross-context verifier with ONLY the actions taken + the quality
-rubric (Pattern 7 — verifier must NOT see worker reasoning). Verifier scores
-independently using the verifier prompt template. 13. **Log the authoritative
-scorecard:** - If verified: log the VERIFIER's scores. Note self-vs-verifier delta in
-agent_notes.md if gap > 1 star on any dimension. - If not verified (Level 1): log
-self-scores as the scorecard. - Mark scorecard source: `Source: self` or
-`Source: verified` 14. **Act on the logged scores:** - ⭐⭐⭐⭐ or above and no critical
-flags → proceed - ⭐⭐⭐ or warnings → log concerns in agent_notes.md - Below ⭐⭐⭐ or
-critical flags → alert human, roll back if possible 15. Update `agent_notes.md` if you
-learned something new (patterns, mistakes, corrections) 16. **Update trust counters** in
-`rules.md`: increment/reset `consecutive_good_runs`, decrement `cooldown_remaining`,
-check circuit breakers (Pattern 9). If 3 consecutive runs below ⭐⭐⭐, auto-demote
-trust level and alert.
+**Quality Gate** (adapt to this workflow's verification level):
+
+10. Append actions to today's log in `logs/`
+
+For **Level A** workflows: stop here. Log only.
+
+For **Level B** workflows (self-score + circuit breakers):
+
+11. Score this run using the quality rubric. Log the scorecard with `Source: self`.
+12. Act on scores: ⭐⭐⭐⭐ or above → proceed. ⭐⭐⭐ → log concerns. Below ⭐⭐⭐ →
+    alert human.
+13. Update `agent_notes.md` if you learned something new.
+14. Update trust counters in `rules.md`. Check circuit breakers (Pattern 9).
+
+For **Level C** workflows (full verification):
+
+11. Draft scorecard using the quality rubric (do NOT log yet).
+12. Spawn a fresh cross-context verifier with ONLY the actions taken + the quality
+    rubric (Pattern 7 — verifier must NOT see worker reasoning).
+13. Log the authoritative scorecard: use VERIFIER's scores. Note self-vs-verifier delta
+    in agent_notes.md if gap > 1 star on any dimension. Mark `Source: verified`.
+14. Act on the verified scores: ⭐⭐⭐⭐ or above → proceed. ⭐⭐⭐ → log concerns.
+    Below ⭐⭐⭐ → alert human, roll back if possible.
+15. Update `agent_notes.md` if you learned something new.
+16. Update trust counters in `rules.md`. Check circuit breakers (Pattern 9).
 
 ### Judgment Guidelines
 
@@ -979,15 +1037,17 @@ trust level and alert.
 - [ ] **Sub-agents:** Any loop over a collection spawns sub-agents per item, not in
       orchestrator
 
-**Verification & Quality:**
+**Verification & Quality** (match to declared verification level):
 
+- [ ] **Verification level** declared in AGENT.md (A, B, or C)
 - [ ] **Definition of Done:** Completion criteria, output validation, and quality rubric
-      are all defined in AGENT.md
-- [ ] **Run scorecard:** Each run scores itself on the quality rubric (⭐ scale)
-- [ ] **Cross-context verification:** Verifier sub-agent configured for trust Level 2+
-- [ ] **Circuit breakers:** 3 consecutive runs below ⭐⭐⭐ triggers demotion and alert
+      are all defined in AGENT.md (all levels)
+- [ ] **Run scorecard:** Each run scores itself on the quality rubric (Level B and C)
+- [ ] **Circuit breakers:** 3 consecutive runs below ⭐⭐⭐ triggers demotion (Level B
+      and C)
+- [ ] **Cross-context verification:** Verifier sub-agent configured (Level C only)
 - [ ] **Self-improvement:** agent_notes.md has Failures & Corrections section; run loop
-      reads it as pre-flight guardrails
+      reads it as pre-flight guardrails (Level B and C)
 
 **Operations:**
 
@@ -996,7 +1056,6 @@ trust level and alert.
       `DELETE FROM processed WHERE last_checked < ...`)
 - [ ] Integration points documented
 - [ ] Cron job configured with appropriate schedule/model
-- [ ] Quality auditor job configured (for high-stakes workflows)
 - [ ] First week monitoring plan in place
 
 ---
