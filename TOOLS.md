@@ -13,10 +13,11 @@ unique to this instance.
 ## Messaging
 
 ### Twilio SMS
-- Jarvis outbound number: +17202608108
+- Jarvis outbound number: +13136312257
 - Authorized inbound callers: +13033453071 (Ziah only)
 - Credentials in Keychain: `jarvis-twilio-sid`, `jarvis-twilio-auth-token`, `jarvis-twilio-phone`
 - Send SMS: `./skills/twilio-sms/twilio-sms send "+13033453071" "message"`
+- Jarvis number (for reference): +13136312257
 
 ### Slack
 - Workspace: DeepGem Interactive

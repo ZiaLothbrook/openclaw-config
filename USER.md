@@ -43,7 +43,7 @@ healthcare, education, and technology sectors.
 - Webhook ingress via Cloudflare Tunnel (port 18789)
 - Credentials stored in macOS Keychain
 - LLM: Anthropic API (Claude Code native)
-- Primary messaging: Twilio SMS (+17202608108 → Ziah's +13033453071)
+- Primary messaging: Twilio SMS (+13136312257 → Ziah's +13033453071)
 - Slack: DeepGem workspace, bot in all key channels
 
 ## Security Posture
