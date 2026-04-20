@@ -33,3 +33,14 @@ Thumbs.db
 __pycache__/
 drafts/
 uv.lock
+
+# Runtime memory files (these are gitignored; copy to backup if needed)
+memory/20*.md
+memory/people/
+memory/projects/
+memory/decisions/
+memory/topics/
+memory/learning/
+
+# Local environment overrides
+CLAUDE.local.md

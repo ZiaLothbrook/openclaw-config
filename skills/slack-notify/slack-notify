@@ -1,0 +1,113 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["httpx>=0.28"]
+# ///
+"""
+Slack notify skill — send messages to Slack channels via Web API.
+Usage: ./slack-notify send <channel> <message>
+       ./slack-notify alert <message>        (sends to #jarvis-alerts)
+       ./slack-notify dm <user_id> <message>
+"""
+
+import argparse
+import os
+import sys
+
+import httpx
+
+ALERTS_CHANNEL = "#jarvis-alerts"
+BRIEFINGS_CHANNEL = "#jarvis-briefings"
+
+
+def get_token() -> str:
+    token = os.environ.get("SLACK_BOT_TOKEN")
+    if not token:
+        print("ERROR: SLACK_BOT_TOKEN not set", file=sys.stderr)
+        sys.exit(1)
+    return token
+
+
+def post_message(channel: str, text: str, thread_ts: str | None = None) -> str:
+    token = get_token()
+    payload: dict = {"channel": channel, "text": text}
+    if thread_ts:
+        payload["thread_ts"] = thread_ts
+
+    with httpx.Client(timeout=15) as client:
+        response = client.post(
+            "https://slack.com/api/chat.postMessage",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+
+    data = response.json()
+    if not data.get("ok"):
+        print(f"ERROR: Slack API error: {data.get('error', 'unknown')}", file=sys.stderr)
+        sys.exit(1)
+
+    ts = data.get("ts", "")
+    print(f"Sent. Channel={channel} ts={ts}")
+    return ts
+
+
+def get_channel_info(channel: str) -> None:
+    token = get_token()
+    channel_id = channel.lstrip("#")
+
+    with httpx.Client(timeout=10) as client:
+        response = client.get(
+            "https://slack.com/api/conversations.list",
+            headers={"Authorization": f"Bearer {token}"},
+            params={"limit": 200},
+        )
+
+    data = response.json()
+    if not data.get("ok"):
+        print(f"ERROR: {data.get('error')}", file=sys.stderr)
+        sys.exit(1)
+
+    channels = data.get("channels", [])
+    match = next((c for c in channels if c["name"] == channel_id), None)
+    if match:
+        print(f"ID={match['id']} Name=#{match['name']} Members={match.get('num_members', '?')}")
+    else:
+        print(f"Channel #{channel_id} not found (may need to invite bot first)")
+
+
+parser = argparse.ArgumentParser(description="Slack notification CLI")
+subparsers = parser.add_subparsers(dest="command", required=True)
+
+send_p = subparsers.add_parser("send", help="Send message to a channel")
+send_p.add_argument("channel", help="Channel name (e.g. #general) or ID")
+send_p.add_argument("message", help="Message text (supports Slack markdown)")
+send_p.add_argument("--thread", help="Thread timestamp to reply in thread", default=None)
+
+alert_p = subparsers.add_parser("alert", help=f"Send alert to {ALERTS_CHANNEL}")
+alert_p.add_argument("message", help="Alert message text")
+
+briefing_p = subparsers.add_parser("briefing", help=f"Post briefing to {BRIEFINGS_CHANNEL}")
+briefing_p.add_argument("message", help="Briefing content")
+
+dm_p = subparsers.add_parser("dm", help="Send DM to a user by ID")
+dm_p.add_argument("user_id", help="Slack user ID (e.g. U012AB3CD)")
+dm_p.add_argument("message", help="Message text")
+
+info_p = subparsers.add_parser("channel-info", help="Get channel ID and info")
+info_p.add_argument("channel", help="Channel name (without #)")
+
+args = parser.parse_args()
+
+if args.command == "send":
+    post_message(args.channel, args.message, thread_ts=args.thread)
+elif args.command == "alert":
+    post_message(ALERTS_CHANNEL, args.message)
+elif args.command == "briefing":
+    post_message(BRIEFINGS_CHANNEL, args.message)
+elif args.command == "dm":
+    post_message(args.user_id, args.message)
+elif args.command == "channel-info":
+    get_channel_info(args.channel)

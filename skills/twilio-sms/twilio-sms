@@ -1,0 +1,89 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["httpx>=0.28"]
+# ///
+"""
+Twilio SMS skill — send SMS messages via Twilio REST API.
+Usage: ./twilio-sms send <to> <body>
+       ./twilio-sms status <message_sid>
+"""
+
+import argparse
+import base64
+import os
+import sys
+
+import httpx
+
+
+def get_credentials() -> tuple[str, str, str]:
+    sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    token = os.environ.get("TWILIO_AUTH_TOKEN")
+    from_number = os.environ.get("TWILIO_PHONE_NUMBER")
+    if not all([sid, token, from_number]):
+        print(
+            "ERROR: Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return sid, token, from_number
+
+
+def send_sms(to: str, body: str) -> None:
+    sid, token, from_number = get_credentials()
+    credentials = base64.b64encode(f"{sid}:{token}".encode()).decode()
+
+    with httpx.Client(timeout=15) as client:
+        response = client.post(
+            f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json",
+            headers={"Authorization": f"Basic {credentials}"},
+            data={"To": to, "From": from_number, "Body": body},
+        )
+
+    if response.status_code >= 400:
+        error = response.json()
+        print(
+            f"ERROR: Twilio returned {response.status_code}: {error.get('message', response.text)}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    data = response.json()
+    print(f"Sent. SID={data['sid']} Status={data['status']}")
+
+
+def get_status(message_sid: str) -> None:
+    sid, token, _ = get_credentials()
+    credentials = base64.b64encode(f"{sid}:{token}".encode()).decode()
+
+    with httpx.Client(timeout=10) as client:
+        response = client.get(
+            f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages/{message_sid}.json",
+            headers={"Authorization": f"Basic {credentials}"},
+        )
+
+    if response.status_code >= 400:
+        print(f"ERROR: {response.status_code} {response.text}", file=sys.stderr)
+        sys.exit(1)
+
+    data = response.json()
+    print(f"SID={data['sid']} Status={data['status']} To={data['to']} Body={data['body']!r}")
+
+
+parser = argparse.ArgumentParser(description="Twilio SMS CLI")
+subparsers = parser.add_subparsers(dest="command", required=True)
+
+send_p = subparsers.add_parser("send", help="Send an SMS message")
+send_p.add_argument("to", help="Recipient phone number (E.164 format, e.g. +13033453071)")
+send_p.add_argument("body", help="Message text")
+
+status_p = subparsers.add_parser("status", help="Check message delivery status")
+status_p.add_argument("sid", help="Twilio message SID")
+
+args = parser.parse_args()
+
+if args.command == "send":
+    send_sms(args.to, args.body)
+elif args.command == "status":
+    get_status(args.sid)
