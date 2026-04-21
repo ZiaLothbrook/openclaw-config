@@ -98,7 +98,7 @@ def run_claude(prompt: str, source: str = "webhook") -> None:
     _last_invocation[source] = now
 
     subprocess.Popen(
-        ["claude", "--print", "--dangerously-skip-permissions", prompt],
+        ["claude", "--print", "--bare", "--dangerously-skip-permissions", prompt],
         cwd=JARVIS_CONFIG_DIR,
         env={**os.environ},
         stdout=subprocess.DEVNULL,
