@@ -6,14 +6,17 @@ The ONLY always-running process. Translates HTTP webhooks into claude CLI invoca
 Has no business logic — just receives, verifies, and fires.
 
 Routes:
-  POST /webhook/sms    — Incoming Twilio SMS
-  POST /webhook/slack  — Slack events (messages, mentions)
-  POST /webhook/omi    — Omi wearable transcripts
-  GET  /health         — Liveness check
+  POST /webhook/sms              — Incoming Twilio SMS
+  POST /webhook/slack            — Slack events (messages, mentions)
+  POST /webhook/omi              — Omi wearable transcripts
+  POST /vapi/chat/completions    — Custom LLM endpoint for Vapi voice calls
+  POST /vapi/events              — Vapi call lifecycle events
+  GET  /health                   — Liveness check
 """
 
 import hashlib
 import hmac
+import json
 import os
 import subprocess
 import time
@@ -226,3 +229,107 @@ async def omi_webhook(request: Request):
         print(f"[gateway] Omi transcript: {text[:80]!r}")
 
     return JSONResponse({"message": "ok"})
+
+
+# ── Vapi voice call routes ────────────────────────────────────────────────────
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+
+@app.post("/vapi/chat/completions")
+async def vapi_llm(request: Request):
+    """OpenAI-compatible LLM endpoint for Vapi voice calls.
+
+    Vapi sends the conversation history here and expects an OpenAI-format response.
+    We forward it to Claude and return the response in the same format.
+    """
+    import httpx as _httpx
+
+    data = await request.json()
+    messages = data.get("messages", [])
+    stream = data.get("stream", False)
+
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not configured")
+
+    # Convert OpenAI message format to Anthropic format
+    system_prompt = ""
+    anthropic_messages = []
+    for msg in messages:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        if role == "system":
+            system_prompt = content
+        elif role in ("user", "assistant"):
+            anthropic_messages.append({"role": role, "content": content})
+
+    if not anthropic_messages:
+        anthropic_messages = [{"role": "user", "content": "Hello"}]
+
+    payload = {
+        "model": "claude-haiku-4-5-20251001",  # Fast model for low voice latency
+        "max_tokens": 256,
+        "messages": anthropic_messages,
+    }
+    if system_prompt:
+        payload["system"] = system_prompt
+
+    async with _httpx.AsyncClient(timeout=10) as client:
+        r = await client.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json=payload,
+        )
+
+    if r.status_code >= 400:
+        print(f"[gateway] Anthropic error: {r.status_code} {r.text[:200]}")
+        raise HTTPException(status_code=502, detail="LLM error")
+
+    result = r.json()
+    text = result["content"][0]["text"]
+
+    # Return in OpenAI-compatible format
+    return JSONResponse({
+        "id": result.get("id", "jarvis-response"),
+        "object": "chat.completion",
+        "model": "claude-haiku",
+        "choices": [{
+            "index": 0,
+            "message": {"role": "assistant", "content": text},
+            "finish_reason": "stop",
+        }],
+        "usage": result.get("usage", {}),
+    })
+
+
+@app.post("/vapi/events")
+async def vapi_events(request: Request):
+    """Vapi call lifecycle events (call-started, call-ended, transcript, etc.)."""
+    data = await request.json()
+    event_type = data.get("message", {}).get("type", data.get("type", "unknown"))
+    call_id = data.get("message", {}).get("call", {}).get("id", "?")
+
+    print(f"[gateway] Vapi event: {event_type} call={call_id}")
+
+    # On call-ended, fire Claude to log the transcript and any follow-ups
+    if event_type == "end-of-call-report":
+        msg = data.get("message", {})
+        transcript = msg.get("transcript", "")
+        summary = msg.get("summary", "")
+        ended_reason = msg.get("endedReason", "unknown")
+
+        if transcript:
+            prompt = (
+                f"Vapi voice call ended. Reason: {ended_reason}\n\n"
+                f"Summary: {summary}\n\n"
+                f"Transcript:\n{transcript}\n\n"
+                f"Save any important outcomes or action items to memory. "
+                f"If follow-up is needed, take action."
+            )
+            run_claude(prompt, source="vapi_event")
+
+    return JSONResponse({"ok": True})

@@ -7,13 +7,14 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/python3</string>
-        <string>/Users/jarvis/jarvis-config/scripts/poll-imessage.py</string>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>/Library/Developer/CommandLineTools/usr/bin/python3 -u /Users/jarvis/jarvis-config/scripts/poll-imessage.py</string>
     </array>
 
-    <!-- Run every 30 seconds -->
-    <key>StartInterval</key>
-    <integer>30</integer>
+    <!-- Long-running daemon — script loops internally every 30s -->
+    <key>KeepAlive</key>
+    <true/>
 
     <key>RunAtLoad</key>
     <true/>

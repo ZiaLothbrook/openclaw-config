@@ -1,0 +1,118 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["httpx>=0.28"]
+# ///
+"""
+Vapi voice calls skill — make outbound phone calls via Vapi.
+Usage: ./vapi-calls call <to_number> <task_instructions>
+       ./vapi-calls status <call_id>
+       ./vapi-calls list
+"""
+
+import argparse
+import json
+import os
+import sys
+
+import httpx
+
+VAPI_API_URL = "https://api.vapi.ai"
+
+
+def get_config() -> dict:
+    config = {
+        "api_key": os.environ.get("VAPI_API_KEY"),
+        "assistant_id": os.environ.get("VAPI_ASSISTANT_ID"),
+        "phone_number_id": os.environ.get("VAPI_PHONE_NUMBER_ID"),
+    }
+    missing = [k for k, v in config.items() if not v]
+    if missing:
+        print(f"ERROR: Missing env vars: {', '.join(missing)}", file=sys.stderr)
+        print("Add them to .env — see skills/vapi-calls/references/setup.md", file=sys.stderr)
+        sys.exit(1)
+    return config
+
+
+def make_call(to_number: str, task: str) -> None:
+    cfg = get_config()
+
+    # Build Jarvis voice persona override
+    system_prompt = f"""You are Jarvis, the AI executive assistant for DeepGem Interactive.
+You are calm, confident, and speak with dry wit. You call people "sir" naturally.
+You are on a live phone call. Be concise — this is voice, not text.
+
+TASK: {task}"""
+
+    first_message = "Good afternoon, sir. Jarvis calling."
+
+    payload = {
+        "phoneNumberId": cfg["phone_number_id"],
+        "assistantId": cfg["assistant_id"],
+        "customer": {"number": to_number},
+        "assistantOverrides": {
+            "model": {"systemPrompt": system_prompt},
+            "firstMessage": first_message,
+        },
+    }
+
+    with httpx.Client(timeout=15) as client:
+        r = client.post(
+            f"{VAPI_API_URL}/call",
+            headers={"Authorization": f"Bearer {cfg['api_key']}"},
+            json=payload,
+        )
+
+    if r.status_code >= 400:
+        print(f"ERROR: {r.status_code} {r.text}", file=sys.stderr)
+        sys.exit(1)
+
+    data = r.json()
+    print(f"Call initiated. ID={data['id']} Status={data['status']} To={to_number}")
+
+
+def get_status(call_id: str) -> None:
+    cfg = get_config()
+    with httpx.Client(timeout=10) as client:
+        r = client.get(
+            f"{VAPI_API_URL}/call/{call_id}",
+            headers={"Authorization": f"Bearer {cfg['api_key']}"},
+        )
+    if r.status_code >= 400:
+        print(f"ERROR: {r.status_code} {r.text}", file=sys.stderr)
+        sys.exit(1)
+    data = r.json()
+    print(f"ID={data['id']} Status={data['status']} Ended={data.get('endedReason','—')}")
+
+
+def list_calls() -> None:
+    cfg = get_config()
+    with httpx.Client(timeout=10) as client:
+        r = client.get(
+            f"{VAPI_API_URL}/call?limit=5",
+            headers={"Authorization": f"Bearer {cfg['api_key']}"},
+        )
+    for call in r.json():
+        print(f"{call['id']}  {call['status']}  {call.get('endedReason','—')}  {call.get('customer',{}).get('number','?')}")
+
+
+parser = argparse.ArgumentParser(description="Vapi voice call CLI")
+subparsers = parser.add_subparsers(dest="command", required=True)
+
+call_p = subparsers.add_parser("call", help="Place an outbound call")
+call_p.add_argument("to", help="Phone number to call (E.164 format)")
+call_p.add_argument("task", help="Instructions for this specific call")
+
+status_p = subparsers.add_parser("status", help="Check call status")
+status_p.add_argument("call_id", help="Vapi call ID")
+
+subparsers.add_parser("list", help="List recent calls")
+
+args = parser.parse_args()
+
+if args.command == "call":
+    make_call(args.to, args.task)
+elif args.command == "status":
+    get_status(args.call_id)
+elif args.command == "list":
+    list_calls()

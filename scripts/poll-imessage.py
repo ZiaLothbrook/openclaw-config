@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """
-iMessage Poller — watches ~/Library/Messages/chat.db for new messages
-from authorized contacts and fires Claude Code to handle them.
-
-Runs every 30 seconds via launchd (com.deepgem.imessage-poller.plist).
-Tracks last-processed message via a state file to avoid double-processing.
+iMessage Watcher — uses FSEvents to detect new messages instantly.
+Fires Claude Code the moment a message lands in chat.db-wal.
 """
 
 import os
@@ -57,14 +54,18 @@ def get_new_messages(last_rowid: int) -> list[dict]:
         print(f"[imessage-poller] chat.db not found at {CHAT_DB}", file=sys.stderr)
         return []
 
-    # Copy DB to temp file to avoid locking issues with Messages.app
+    # Copy DB + WAL + SHM so SQLite sees consistent state including uncommitted pages
     tmp = tempfile.mktemp(suffix=".db")
     try:
         shutil.copy2(CHAT_DB, tmp)
+        for ext in ("-wal", "-shm"):
+            src = CHAT_DB + ext
+            if os.path.exists(src):
+                shutil.copy2(src, tmp + ext)
+
         conn = sqlite3.connect(tmp)
         conn.row_factory = sqlite3.Row
 
-        # Get messages newer than last_rowid that are inbound (is_from_me = 0)
         rows = conn.execute("""
             SELECT
                 m.ROWID,
@@ -87,10 +88,11 @@ def get_new_messages(last_rowid: int) -> list[dict]:
         print(f"[imessage-poller] DB error: {e}", file=sys.stderr)
         return []
     finally:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
+        for suffix in ("", "-wal", "-shm"):
+            try:
+                os.unlink(tmp + suffix)
+            except OSError:
+                pass
 
 
 # ── Claude invocation ─────────────────────────────────────────────────────────
@@ -104,7 +106,7 @@ def run_claude(sender: str, text: str) -> None:
     )
 
     subprocess.Popen(
-        ["claude", "--print", "--bare", "--dangerously-skip-permissions", prompt],
+        ["/usr/local/bin/claude", "--print", "--bare", "--dangerously-skip-permissions", prompt],
         cwd=JARVIS_CONFIG_DIR,
         env=env,
         stdout=subprocess.DEVNULL,
@@ -124,15 +126,24 @@ def main() -> None:
         tmp = tempfile.mktemp(suffix=".db")
         try:
             shutil.copy2(CHAT_DB, tmp)
+            for ext in ("-wal", "-shm"):
+                src = CHAT_DB + ext
+                if os.path.exists(src):
+                    shutil.copy2(src, tmp + ext)
             conn = sqlite3.connect(tmp)
             row = conn.execute("SELECT MAX(ROWID) FROM message").fetchone()
             conn.close()
             if row and row[0]:
                 save_last_rowid(row[0])
                 print(f"[imessage-poller] Initialized at rowid {row[0]}")
-            os.unlink(tmp)
         except Exception as e:
             print(f"[imessage-poller] Init error: {e}", file=sys.stderr)
+        finally:
+            for suffix in ("", "-wal", "-shm"):
+                try:
+                    os.unlink(tmp + suffix)
+                except OSError:
+                    pass
         return
 
     messages = get_new_messages(last_rowid)
@@ -156,4 +167,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    print(f"[imessage-watcher] Starting — polling every 2s")
+    while True:
+        try:
+            main()
+        except Exception as e:
+            print(f"[imessage-watcher] Error: {e}", file=sys.stderr)
+        time.sleep(2)

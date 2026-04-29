@@ -67,6 +67,7 @@ export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
 exec uv run \
     --with "fastapi[standard]>=0.115" \
     --with "uvicorn[standard]>=0.34" \
+    --with "httpx>=0.28" \
     uvicorn gateway:app \
     --host 127.0.0.1 \
     --port 18789 \
